@@ -76,7 +76,7 @@ void push(struct lista_FCFS* fcfs, struct PCB* pcb){
 struct PCB* pop(struct lista_FCFS* fcfs){
     if (fcfs->tamanho == 0)
         return;
-
+    //(*fcfs).head == fcfs->head
     struct PCB* temporario = fcfs->head;
     fcfs->head = fcfs->head->proximo;
     fcfs->tamanho -= 1;
@@ -111,35 +111,38 @@ int main()
         //printf ("fila FCFS tamanho: %d\n",fila.tamanho);
 }
 
-    struct lista_FCFS* node;
-    node->head = fila.head;
+    //struct lista_FCFS* node;
+    struct PCB *pcb = pop(&fila);
+    //struct PCB node;
+    //node = pop(fila);
+    //node->head = fila.head;
 
-    printf ("\n----Visualizando a fila FCFS------\n");
-        while(node->head->pid < processos){
-            printf("Pid: %d, Chegada: %d, Burst: %d\n", node->head->pid, node->head->chegada, node->head->burst);
-            node->head = node->head->proximo;
-         }
+    //printf ("\n----Visualizando a fila FCFS------\n");
+    //    while(node->head->pid < processos){
+    //        printf("Pid: %d, Chegada: %d, Burst: %d\n", node->head->pid, node->head->chegada, node->head->burst);
+    //        node->head = node->head->proximo;
+    //     }
     printf ("\n----Executando a fila FCFS------\n");
     int t = 0;
-    node->head = fila.head;
-    while(node->head->pid < processos){
-        while(node->head->burst > 0){
-            printf ("T: %d, Pid: %d, Burst: %d\n", t, node->head->pid, node->head->burst);
+    //node->head = fila.head;
+    while(pcb != NULL){
+        while(pcb->burst > 0){
+            printf ("T: %d, Pid: %d, Burst: %d\n", t, pcb->pid, pcb->burst);
             t += 1;
-            node->head->burst -= 1;
-            if (node->head->burst == 0){
-                turnaround_FCFS[node->head->pid] = t - node->head->chegada;
-                printf("Turnaround: %d\n", turnaround_FCFS[node->head->pid]);
-                espera_FCFS[node->head->pid] += turnaround_FCFS[node->head->pid];
-                printf ("Terminou processo pid: %d, Proximo pid: %d\n", node->head->pid, node->head->proximo->pid);
+            pcb->burst -= 1;
+            if (pcb->burst == 0){
+                turnaround_FCFS[pcb->pid] = t - pcb->chegada;
+                printf("Turnaround: %d\n", turnaround_FCFS[pcb->pid]);
+                espera_FCFS[pcb->pid] += turnaround_FCFS[pcb->pid];
+                printf ("Terminou processo pid: %d, Proximo pid: %d\n", pcb->pid, pcb->proximo->pid);
             }
+
         }
-        pop(&fila);
-        node->head = fila.head;
+        pcb = pop(&fila);
     }
     printf("--------------------------------------//----------------------------------------\n");
 
-
-
+    for (int i = 0; i < processos; i++)
+        printf("%d\n", turnaround_FCFS[i]);
     return 0;
 }
