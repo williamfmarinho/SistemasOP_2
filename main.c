@@ -100,9 +100,6 @@ void listar_todos_os_pcbs(){
 
 
 
-
-
-
 typedef struct Heap_minimo {
     int capacidade_heap;
     int tamanho_heap;
@@ -186,7 +183,18 @@ struct PCB heap_pop(Heap_minimo* heap) {
 
 
 
+
+    int media(int x[]){
+        int s = 0;
+        for (int i = 0; i < processos; i++)
+            s += x[i];
+        return s/processos;
+    }
+
+
           //!--------------------------------------------------MAIN---------------------------------------------------------------
+
+
 
 int main()
 {
@@ -200,7 +208,6 @@ int main()
     setup_FCFS(&fila);
     listar_todos_os_pcbs();
     printf("-------------------------------------------------------------\n");
-    //!--------------------------------------------------------------------------------------------------------------------------------------------
     printf("\n");
     for (int i = 0; i < processos; i++) {
         lista_PCB[i].burst = lista_Burst[i];
@@ -241,22 +248,22 @@ int main()
         }
         pcb = pop(&fila);
     }
-    printf("--------------------------------------//----------------------------------------\n");
 
     //! Mostrando os turnaround do fcfs
     //for (int i = 0; i < processos; i++)
         //printf("%d\n", turnaround_FCFS[i]);
 
     for (int i = 0; i < 15; i++)
-        printf("/\/\/\/\/\/\/\/\n");
+        printf("/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\n");
     printf ("------------------------------PRIORIDADE------------------------------\n");
     //!------------------------------------------------------------PRIORIDADE------------------------------------------------------------------------------
-    setup_inicial();
+    for (int i = 0; i < processos; i++)
+        lista_PCB[i].burst = lista_Burst[i];
+
     listar_todos_os_pcbs();
     int t_prioridade = 0;
     int turnaround_prioridade[processos];
     int espera_prioridade[processos];
-    printf ("-----------------------------------------------------------------------\n");
 
 
 
@@ -306,6 +313,147 @@ int main()
             }
             node_prioridade = heap_pop(heap);
     }
+
+
+    for (int i = 0; i < 15; i++)
+        printf("/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\n");
+
+
+
+        printf ("------------------------------SHORTEST JOB FIRST------------------------------\n");
+    //!------------------------------------------------------------SHORTEST JOB FIRST------------------------------------------------------------------------------
+
+
+
+    for (int i = 0; i < processos; i++)
+        lista_PCB[i].burst = lista_Burst[i];
+
+    listar_todos_os_pcbs();
+
+    int turnaround_SJF[processos];
+    int espera_SJF[processos];
+    struct PCB fila_SJF[processos];
+    int t_SJF = 0;
+
+
+
+     Heap_minimo* heap_SJF = Criar_heap_minimo(processos);
+    for (int i = 0; i < processos; i++){
+        struct PCB node_SJF = lista_PCB[i];
+        printf ("prioridade atual do node %d: %d\n", i, node_SJF.prioridade);
+        node_SJF.prioridade =  node_SJF.burst;
+        printf ("Mudou prioridade do node %d: para %d\n", i, node_SJF.prioridade);
+        push_heap(heap_SJF, node_SJF);
+        turnaround_SJF[i] = 0;
+        espera_SJF[i] = -lista_Burst[i];
+
+    }
+    //!Repetindo a realimentacao dos bursts que foi feito no prioridade, mas agora no SJF
+
+    printf("\n");
+    //!Visualizando a fila heap SJF
+
+    for (int i = 0; i < processos; i++){
+        printf("Heap SJF. PID: %d, burst: %d Prioridade: %d\n", heap_SJF->data[i].pid, heap_SJF->data[i].burst, heap_SJF->data[i].prioridade);
+    }
+    struct PCB node_SJF = heap_pop(heap_SJF);
+
+     printf("\n");
+    while(node_SJF.pid != -1){
+            while(node_SJF.burst > 0){
+                printf ("T: %d, Prioridade: %d, PID: %d, Burst: %d\n", t_SJF, node_SJF.prioridade, node_SJF.pid, node_SJF.burst);
+                t_SJF += 1;
+                node_SJF.burst -= 1;
+                if (node_SJF.burst == 0){
+                    turnaround_SJF[node_SJF.pid] = t_SJF - node_SJF.chegada;
+                    espera_SJF[node_SJF.pid] += turnaround_SJF[node_SJF.pid];
+                    printf("Turnaround do node %d: %d\n", node_SJF.pid, turnaround_SJF[node_SJF.pid]);
+
+                }
+
+
+            }
+            node_SJF = heap_pop(heap_SJF);
+    }
+
+
+
+
+    for (int i = 0; i < 15; i++)
+        printf("/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\n");
+
+
+
+        printf ("------------------------------ROUND ROBIN------------------------------\n");
+    //!------------------------------------------------------------ROUND ROBIN------------------------------------------------------------------------------
+
+    for (int i = 0; i < processos; i++)
+        lista_PCB[i].burst = lista_Burst[i];
+
+    int t_RR = 0;
+    int turnaround_RR[processos];
+    int espera_RR[processos];
+    struct lista_FCFS fila_RR;
+    setup_FCFS(&fila_RR);
+
+    listar_todos_os_pcbs();
+
+    printf("\n");
+
+    for (int i = 0; i < processos; i++) {
+        lista_PCB[i].burst = lista_Burst[i];
+        espera_RR[i] = -lista_Burst[i];
+        turnaround_RR[i] = 0;
+        push(&fila_RR, &lista_PCB[i]);
+    }
+    //printf("Visualizando a fila ROUND ROBIN:\n");
+    struct PCB *pcb_RR = pop(&fila_RR);
+    //for (int i = 0; i < processos-1; i++){
+    //    printf ("Node atual: %d, proximo: %d\n", pcb_RR->pid, fila_RR.head->pid);
+    //    pcb_RR = pop(&fila_RR);
+    //}
+
+    printf("\n");
+
+    while(pcb_RR != NULL){
+            int quantum = 3;
+        while(quantum > 0){
+            printf ("T: %d, Pid: %d, Burst: %d\n", t, pcb_RR->pid, pcb_RR->burst);
+            t_RR += 1;
+            pcb_RR->burst -= 1;
+            if (pcb_RR->burst == 0){
+                turnaround_RR[pcb_RR->pid] = t_RR - pcb_RR->chegada;
+                printf("Turnaround: %d\n", turnaround_RR[pcb_RR->pid]);
+                espera_RR[pcb_RR->pid] += turnaround_RR[pcb_RR->pid];
+                break;
+            }
+            quantum -= 1;
+        }
+        printf("\n");
+        if (pcb_RR->burst > 0)
+            push(&fila_RR, pcb_RR);
+        pcb_RR = pop(&fila_RR);
+    }
+
+
+for (int i = 0; i < 15; i++)
+        printf("/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\n");
+
+
+
+        printf ("------------------------------Comparando os resultados------------------------------\n");
+    //!------------------------------------------------------------COMPARANDO RESULTADOS------------------------------------------------------------------------------
+
+    printf("Turnaround FCFS: %d\n", media(turnaround_FCFS));
+    printf("Turnaround Prioridade: %d\n", media(turnaround_prioridade));
+    printf("Turnaround SJF: %d\n", media(turnaround_SJF));
+    printf("Turnaround RR: %d\n", media(turnaround_RR));
+    printf("\n");
+    printf("\n");
+    printf("Espera FCFS: %d\n", media(espera_FCFS));
+    printf("Espera Prioridade: %d\n", media(espera_prioridade));
+    printf("Espera SJF: %d\n", media(espera_SJF));
+    printf("Espera RR: %d\n", media(espera_RR));
 
 
     return 0;
